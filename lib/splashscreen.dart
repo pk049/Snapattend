@@ -1,54 +1,60 @@
 import 'dart:async';
 import 'package:eduvision/main.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:eduvision/Loginpage.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-class Splashscrren extends StatefulWidget{
-
+class Splashscreen extends StatefulWidget {
   @override
-  State<Splashscrren> createState() => _SplashscrrenState();
-
-
+  State<Splashscreen> createState() => _SplashscreenState();
 }
 
-class _SplashscrrenState extends State<Splashscrren> {
+class _SplashscreenState extends State<Splashscreen> {
+
 
   @override
-  void initState()
-  {
+  void initState() {
     super.initState();
-    Timer(Duration(seconds: 2),(){
-      Navigator.pushReplacement(context,MaterialPageRoute(builder:(context)=>Loginpage()));
+    Timer(Duration(seconds: 4), () {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => Loginpage()));
     });
   }
 
-
   @override
-  Widget build(BuildContext context)
-  {
-     return Scaffold(
-       body:Container(
-         height:double.infinity,
-         width: double.infinity,
-         color:Colors.yellowAccent,
-         child: Center(
-           child:Column( mainAxisAlignment:MainAxisAlignment.center, children: [  Row(
-             mainAxisAlignment:MainAxisAlignment.center,
-             children: [Text("Eduvision",style:TextStyle(fontFamily: 'Lato',
-               fontSize: 40)),
-                         Container(width: 10,),
-                         Icon(Icons.remove_red_eye_rounded,size:60,)],
-           ),Container(height:10),
-           CircularProgressIndicator(
-             color: Colors.black,
-             backgroundColor: Colors.black.withOpacity(0.4),
-             strokeWidth:6.0,
-           )]),
-         ),
-       ) ,
-     );
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        color: Colors.blueAccent, // Changed background to blue
+        padding: EdgeInsets.all(16), // Added padding for layout fix
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "SnapAttend",
+                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.w600, color: Colors.white),
+                  ),
+                  SizedBox(width: 10),
+                  Icon(
+                    Icons.remove_red_eye_rounded,
+                    size: 60,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              CircularProgressIndicator(
+                color: Colors.white, // Changed indicator color to white for better contrast
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
