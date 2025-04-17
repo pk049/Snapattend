@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:eduvision/Photopage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:eduvision/Attendance_view.dart';
 
-class CapturePage extends StatelessWidget {
-  final List<Map<String, dynamic>> timetable = [
-    {"subject": "Compiler Design", "time": "9:40 - 10:40", "icon": Icons.settings, "color": Colors.purple},
-    {"subject": "Operating Systems", "time": "10:40 - 11:40", "icon": Icons.computer, "color": Colors.blue},
-    {"subject": "Break", "time": "10 mins", "isBreak": true},
-    {"subject": "C Programming", "time": "11:50 - 12:50", "icon": Icons.code, "color": Colors.green},
-    {"subject": "Machine Learning", "time": "12:50 - 1:50", "icon": Icons.memory, "color": Colors.orange},
-    {"subject": "Break", "time": "40 mins", "isBreak": true},
-    {"subject": "Chemistry LAB", "time": "2:30 - 4:30", "icon": Icons.science, "color": Colors.red},
-  ];
+class CapturePage extends StatefulWidget {
+  @override
+  _CapturePageState createState() => _CapturePageState();
+}
+
+class _CapturePageState extends State<CapturePage> {
+  String? selectedDivision;
+  String? selectedClass;
+  String? selectedSubject;
+  final ImagePicker _picker = ImagePicker();
+
+  final List<String> divisions = ['A', 'B'];
+  final List<String> classes = ['FY', 'SY', 'TY', 'Final_year'];
+  final List<String> subjects = ['Subject1', 'Subject2', 'Subject3'];
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +25,11 @@ class CapturePage extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
         title: Text(
-          '',
+          'Capture',
           style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.normal,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
           ),
         ),
       ),
@@ -37,183 +44,226 @@ class CapturePage extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header
               Container(
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 25),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
+                padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text(
-                  "Today's Timetable",
+                  "Select Details",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Colors.blue[800],
                   ),
                   textAlign: TextAlign.center,
                 ),
               ),
-              SizedBox(height: 25),
-              Expanded(
-                child: ListView.builder(
-                  physics: BouncingScrollPhysics(),
-                  itemCount: timetable.length,
-                  itemBuilder: (context, index) {
-                    final item = timetable[index];
+              SizedBox(height: 40),
 
-                    if (item.containsKey("isBreak")) {
-                      return Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Divider(
-                                color: Colors.grey[400],
-                                thickness: 1,
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  "${item['subject']} (${item['time']})",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Divider(
-                                color: Colors.grey[400],
-                                thickness: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+              // Division Dropdown
+              _buildDropdown(
+                label: "Division",
+                hint: "Select Division",
+                value: selectedDivision,
+                items: divisions,
+                onChanged: (value) {
+                  setState(() {
+                    selectedDivision = value;
+                  });
+                },
+                icon: Icons.group,
+              ),
+              SizedBox(height: 24),
 
-                    return Container(
-                      margin: EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (item["color"] as Color).withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => onTileTap(context, item['subject']),
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: (item["color"] as Color).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    item["icon"],
-                                    color: item["color"],
-                                    size: 28,
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item['subject'],
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.access_time,
-                                            size: 16,
-                                            color: Colors.grey[600],
-                                          ),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            item['time'],
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.grey[400],
-                                  size: 18,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
+              // Class Dropdown
+              _buildDropdown(
+                label: "Class",
+                hint: "Select Class",
+                value: selectedClass,
+                items: classes,
+                onChanged: (value) {
+                  setState(() {
+                    selectedClass = value;
+                  });
+                },
+                icon: Icons.school,
+              ),
+              SizedBox(height: 24),
+
+              // Subject Dropdown
+              _buildDropdown(
+                label: "Subject",
+                hint: "Select Subject",
+                value: selectedSubject,
+                items: subjects,
+                onChanged: (value) {
+                  setState(() {
+                    selectedSubject = value;
+                  });
+                },
+                icon: Icons.book,
+              ),
+
+              Spacer(),
+
+              // Capture Button
+              Container(
+                height: 60,
+                margin: EdgeInsets.only(bottom: 20),
+                child: ElevatedButton(
+                  onPressed: () {
+                    _captureAndNavigate();
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    elevation: 8,
+                    shadowColor: Colors.blue.withOpacity(0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.camera_alt,
+                        size: 28,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        "CAPTURE",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add your action here
-        },
-        child: Icon(Icons.camera_alt),
-        backgroundColor: Colors.blue,
-      ),
     );
   }
 
-  void onTileTap(BuildContext context, String subject) {
-    final time = timetable.firstWhere((item) => item['subject'] == subject)['time'];
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PhotoPage(subject: subject, time: time),
-      ),
+  Future<void> _captureAndNavigate() async {
+    try {
+      // Open camera
+      final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+
+      if (photo != null) {
+        // Get current time
+        final now = DateTime.now();
+        final currentTime = "${now.hour}:${now.minute.toString().padLeft(2, '0')}";
+
+        // Navigate to attendance view with captured image
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AttendanceView(
+              division: selectedDivision ?? 'None',
+              classroom: selectedClass ?? 'None',
+              subject: selectedSubject ?? 'None',
+              time: currentTime,
+              imagePath: photo.path,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error capturing image: $e");
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Camera Error"),
+            content: Text("There was an error accessing the camera. Please check your camera permissions."),
+            actions: [
+              TextButton(
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required String hint,
+    required String? value,
+    required List<String> items,
+    required Function(String?) onChanged,
+    required IconData icon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 8, bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.blue[800],
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.1),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: DropdownButtonFormField<String>(
+            value: value,
+            isExpanded: true,
+            decoration: InputDecoration(
+              prefixIcon: Icon(
+                icon,
+                color: Colors.blue,
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+            hint: Text(hint),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+            icon: Icon(
+              Icons.arrow_drop_down_circle,
+              color: Colors.blue,
+            ),
+            items: items.map((String item) {
+              return DropdownMenuItem<String>(
+                value: item,
+                child: Text(item),
+              );
+            }).toList(),
+            onChanged: onChanged,
+            dropdownColor: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 }
