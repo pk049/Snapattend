@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:eduvision/main.dart';
 import 'package:flutter/material.dart';
 import 'package:eduvision/Loginpage.dart';
 
@@ -9,14 +8,14 @@ class Splashscreen extends StatefulWidget {
 }
 
 class _SplashscreenState extends State<Splashscreen> {
-
-
   @override
   void initState() {
     super.initState();
     Timer(Duration(seconds: 4), () {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => Loginpage()));
+          context,
+          MaterialPageRoute(builder: (context) => Loginpage())
+      );
     });
   }
 
@@ -26,31 +25,62 @@ class _SplashscreenState extends State<Splashscreen> {
       body: Container(
         height: double.infinity,
         width: double.infinity,
-        color: Colors.blueAccent, // Changed background to blue
-        padding: EdgeInsets.all(16), // Added padding for layout fix
+        color: Colors.blue,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "SnapAttend",
-                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.w600, color: Colors.white),
-                  ),
-                  SizedBox(width: 10),
-                  Icon(
-                    Icons.remove_red_eye_rounded,
-                    size: 60,
-                    color: Colors.white,
-                  ),
-                ],
+              // Logo and App Name
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "SnapAttend",
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Icon(
+                      Icons.camera_alt_rounded,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
               ),
+
+              SizedBox(height: 50),
+
+              // Loader
+              SizedBox(
+                width: 50,
+                height: 50,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 6,
+                ),
+              ),
+
               SizedBox(height: 20),
-              CircularProgressIndicator(
-                color: Colors.white, // Changed indicator color to white for better contrast
-              )
+
+              // Tagline
+              Text(
+                "Attendance Made Simple",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white70,
+                ),
+              ),
             ],
           ),
         ),
