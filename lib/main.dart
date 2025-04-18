@@ -28,8 +28,10 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, this.professorName, this.department});
   final String title;
+  final String? professorName;
+  final String? department;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -70,9 +72,30 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  child: const Text(
-                    "Pratik Kumbhar",
-                    style: TextStyle(
+                  child: Text(
+                    widget.professorName ?? "Professor Name", // Display professor name if available
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.normal,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    widget.department ?? "Department Name", // Display department name if available
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.normal,
                       color: Colors.white,

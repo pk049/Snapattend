@@ -34,7 +34,7 @@ class _LoginpageState extends State<Loginpage> {
 
       // Make the POST request
       final response = await http.post(
-        Uri.parse('http://192.168.1.4:5000/login'),
+        Uri.parse('http://192.168.1.15:5000/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestData),
       );
@@ -47,10 +47,14 @@ class _LoginpageState extends State<Loginpage> {
 
       // Check if login was successful
       if (responseData['status'] == 'success') {
+        final String department = responseData['department'] ?? 'Unknown Department';
+        final String name = responseData['name'] ?? 'Unknown Professor';
+
         // Navigate to home page on success
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MyHomePage(title: "Eduvision")),
+          MaterialPageRoute(builder: (context) => MyHomePage(title: "Eduvision", professorName: name,
+            department: department,)),
         );
       } else {
         // Show error toast
