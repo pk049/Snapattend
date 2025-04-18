@@ -66,10 +66,17 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void attendance() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => CapturePage()));
-  }
 
+  void attendance() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => CapturePage(
+              department: widget.department ?? "Department Name",
+            )
+        )
+    );
+  }
   void report() {}
 
   void logs() {}

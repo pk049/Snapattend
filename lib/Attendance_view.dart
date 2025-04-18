@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 
+// Modify the constructor in AttendanceView to accept department parameter
 class AttendanceView extends StatefulWidget {
   final String division;
   final String classroom;
   final String subject;
   final String time;
   final String imagePath;
+  final String department; // Add department parameter
 
-  AttendanceView({
+  const AttendanceView({
+    Key? key,
     required this.division,
     required this.classroom,
     required this.subject,
     required this.time,
     required this.imagePath,
-  });
+    required this.department, // Add this parameter
+  }) : super(key: key);
 
   @override
-  _AttendanceViewState createState() => _AttendanceViewState();
+  State<AttendanceView> createState() => _AttendanceViewState();
 }
 
 class _AttendanceViewState extends State<AttendanceView> {
