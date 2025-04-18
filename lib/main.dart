@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:eduvision/Navbar.dart';
 import 'package:eduvision/Capturepage.dart';
 import 'package:eduvision/splashscreen.dart';
+import 'dart:async';
+import 'package:intl/intl.dart';
 
 // MAIN FUNCTION
 void main() {
@@ -38,6 +40,32 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String _currentTime = '';
+  String _currentDate = '';
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateDateTime();
+    // Update the time every second
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateDateTime());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _updateDateTime() {
+    final now = DateTime.now();
+    setState(() {
+      _currentTime = DateFormat('h:mm a').format(now);
+      _currentDate = DateFormat('EEEE, d MMMM yyyy').format(now);
+    });
+  }
+
   void attendance() {
     Navigator.push(context, MaterialPageRoute(builder: (context) => CapturePage()));
   }
@@ -47,6 +75,98 @@ class _MyHomePageState extends State<MyHomePage> {
   void logs() {}
 
   void schedule() {}
+
+  void _showProfileDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 5,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 10),
+                // Profile Avatar
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.blueAccent, width: 3),
+                    color: Colors.grey.shade200,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.person,
+                      size: 60,
+                      color: Colors.blueAccent,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Professor Name
+                Text(
+                  widget.professorName ?? "Professor Name",
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Department
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    widget.department ?? "Department Name",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blueAccent,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Close Button
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  ),
+                  child: const Text(
+                    "Close",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,9 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             child: IconButton(
               icon: const Icon(Icons.account_circle, size: 40, color: Colors.white),
-              onPressed: () {
-                // Profile action
-              },
+              onPressed: _showProfileDialog,
             ),
           ),
         ],
@@ -225,16 +343,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
                           const SizedBox(height: 8),
 
-                          // Date display with container
+                          // Dynamic Date display with container
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text(
-                              "Friday, 11 April 2025",
-                              style: TextStyle(
+                            child: Text(
+                              _currentDate,
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -244,7 +362,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                           const SizedBox(height: 15),
 
-                          // Time display with glowing border
+                          // Dynamic Time display with glowing border
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                             decoration: BoxDecoration(
@@ -263,9 +381,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                 ),
                               ],
                             ),
-                            child: const Text(
-                              "12:30 PM",
-                              style: TextStyle(
+                            child: Text(
+                              _currentTime,
+                              style: const TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,

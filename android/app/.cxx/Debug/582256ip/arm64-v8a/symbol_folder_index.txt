@@ -1,0 +1,1 @@
+C:\Users\kumbh\AndroidStudioProjects\Snapattend\build\app\intermediates\cxx\Debug\582256ip\obj\arm64-v8a
