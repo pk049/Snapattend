@@ -40,10 +40,13 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  http: ^0.13.5  # For making HTTP requests
+  fluttertoast: ^8.1.2  # For showing toast messages
+
   image_picker: ^1.0.4
 
 
-  google_fonts: ^6.2.1
+
 
 
 
