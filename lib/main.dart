@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:eduvision/Navbar.dart';
 import 'package:eduvision/Capturepage.dart';
 import 'package:eduvision/splashscreen.dart';
+import 'package:eduvision/Report_select.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
 
@@ -77,7 +78,16 @@ class _MyHomePageState extends State<MyHomePage> {
         )
     );
   }
-  void report() {}
+  void report() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ReportTypePage(
+              department: widget.department ?? "Department Name",
+            )
+        )
+    );
+  }
 
   void logs() {}
 
@@ -477,12 +487,12 @@ class _MyHomePageState extends State<MyHomePage> {
                         logs
                     ),
                     const SizedBox(height: 18),
-                    _buildRectangularTile(
-                        "Schedule",
-                        "Manage class and event timings",
-                        Icons.calendar_today,
-                        schedule
-                    ),
+                    // _buildRectangularTile(
+                    //     "Schedule",
+                    //     "Manage class and event timings",
+                    //     Icons.calendar_today,
+                    //     schedule
+                    // ),
                   ],
                 ),
               ),

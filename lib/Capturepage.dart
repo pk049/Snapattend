@@ -16,13 +16,13 @@ class CapturePage extends StatefulWidget {
 }
 
 class _CapturePageState extends State<CapturePage> {
-  String? selectedDivision;
+  String? selectedDivision = 'NA';
   String? selectedClass;
   String? selectedSubject;
   final ImagePicker _picker = ImagePicker();
 
-  final List<String> divisions = ['A', 'B'];
-  final List<String> classes = ['FY', 'SY', 'TY', 'Final_year'];
+  final List<String> divisions = ['NA', 'A', 'B'];
+  final List<String> classes = ['FY', 'SY', 'TY', 'Final_Yr'];
   List<String> subjects = []; // Will be populated from API
   bool isLoadingSubjects = false;
 
@@ -189,7 +189,7 @@ class _CapturePageState extends State<CapturePage> {
   }
 
   bool _canCapturePhoto() {
-    return selectedDivision != null && selectedClass != null && selectedSubject != null;
+    return selectedClass != null && selectedSubject != null;
   }
 
   Future<void> _fetchSubjects(String classValue) async {

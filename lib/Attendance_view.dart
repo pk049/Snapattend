@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 // Modify the constructor in AttendanceView to accept department parameter
 class AttendanceView extends StatefulWidget {
@@ -26,6 +28,7 @@ class AttendanceView extends StatefulWidget {
 
 class _AttendanceViewState extends State<AttendanceView> {
   late String currentImagePath;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -133,9 +136,18 @@ class _AttendanceViewState extends State<AttendanceView> {
               width: double.infinity,
               margin: EdgeInsets.all(20),
               child: ElevatedButton.icon(
-                icon: Icon(Icons.check_circle),
+                icon: isLoading
+                    ? SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                    : Icon(Icons.check_circle),
                 label: Text(
-                  "MARK ATTENDANCE",
+                  isLoading ? "PROCESSING..." : "MARK ATTENDANCE",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -150,9 +162,7 @@ class _AttendanceViewState extends State<AttendanceView> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {
-                  _markAttendance();
-                },
+                onPressed: isLoading ? null : _markAttendance,
               ),
             ),
           ],
@@ -161,22 +171,81 @@ class _AttendanceViewState extends State<AttendanceView> {
     );
   }
 
-  void _markAttendance() {
-    // Print attendance details to console
-    print('Attendance marked successfully!');
-    print('Division: ${widget.division}');
-    print('Class: ${widget.classroom}');
-    print('Subject: ${widget.subject}');
-    print('Time: ${widget.time}');
+  Future<void> _markAttendance() async {
+    setState(() {
+      isLoading = true;
+    });
 
-    // Show a success message to the user
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Attendance marked successfully!'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
-    );
+    try {
+      // Create a multipart request
+      final Uri uri = Uri.parse('http://192.168.1.4:3000/detect_faces');
+      final request = http.MultipartRequest('POST', uri);
+
+      // Add text fields
+      request.fields['class'] = widget.classroom;
+      request.fields['subject'] = widget.subject;
+      request.fields['division'] = widget.division;
+
+      // Add the department field if you want to include it
+      request.fields['department'] = widget.department;
+
+      // Add the image file
+      final imageFile = File(currentImagePath);
+      final stream = http.ByteStream(imageFile.openRead());
+      final length = await imageFile.length();
+
+      final multipartFile = http.MultipartFile(
+        'image',
+        stream,
+        length,
+        filename: 'attendance_image.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      );
+
+      request.files.add(multipartFile);
+
+      // Send the request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      // Handle the response
+      if (response.statusCode == 200) {
+        print('Request successful!');
+        print('Response: ${response.body}');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Attendance marked successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        print('Request failed with status: ${response.statusCode}');
+        print('Response: ${response.body}');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to mark attendance. Error: ${response.statusCode}'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error sending request: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
