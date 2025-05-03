@@ -6,6 +6,8 @@ import 'package:eduvision/splashscreen.dart';
 import 'package:eduvision/Report_select.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
+import 'package:eduvision/log_view_page.dart';
+
 
 // MAIN FUNCTION
 void main() {
@@ -89,8 +91,17 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void logs() {}
-
+  void logs() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => LogViewPage(
+              facultyName: widget.professorName ?? "Professor Name",
+              department: widget.department ?? "Department Name",  // Pass department to LogViewPage
+            )
+        )
+    );
+  }
   void schedule() {}
 
   void _showProfileDialog() {
