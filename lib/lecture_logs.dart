@@ -70,7 +70,7 @@ class _LectureLogsState extends State<LectureLogs> {
 
       // Make the POST request
       final response = await http.post(
-        Uri.parse('http://192.168.1.4:5000/get_lecture_logs'),
+        Uri.parse('http://192.168.29.102:5000/get_lecture_logs'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestData),
       ).timeout(const Duration(seconds: 60));

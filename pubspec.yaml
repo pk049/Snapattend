@@ -47,7 +47,7 @@ dev_dependencies:
 
   intl: ^0.18.0
 
-  fl_chart: ^0.62.0
+  fl_chart: ^0.64.0
 
 
 
