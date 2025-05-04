@@ -177,8 +177,7 @@ class _AttendanceViewState extends State<AttendanceView> {
     });
 
     try {
-      // Create a multipart request
-      final Uri uri = Uri.parse('http://192.168.226.136:3000/detect_faces');
+      final Uri uri = Uri.parse('http://192.168.1.4:3000/detect_faces');
       final request = http.MultipartRequest('POST', uri);
 
       // Add text fields

@@ -1,0 +1,2 @@
+D:/flutter apps/Snapattend/android/app/.cxx/Debug/3s3273a5/x86/CMakeFiles/edit_cache.dir
+D:/flutter apps/Snapattend/android/app/.cxx/Debug/3s3273a5/x86/CMakeFiles/rebuild_cache.dir
