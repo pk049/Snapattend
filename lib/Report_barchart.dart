@@ -527,7 +527,7 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
       String classWithDepartment = '${selectedClass}_${widget.department}';
 
       final response = await http.post(
-        Uri.parse('http://192.168.1.4:5000/attendance-summary'),
+        Uri.parse('http://192.168.226.136:5000/attendance-summary'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'class': classWithDepartment,

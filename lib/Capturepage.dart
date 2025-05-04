@@ -206,7 +206,7 @@ class _CapturePageState extends State<CapturePage> {
 
       // Make POST request to the API
       final response = await http.post(
-        Uri.parse('http://192.168.1.4:5000/get_subjects'),
+        Uri.parse('http://192.168.226.136:5000/get_subjects'),
         headers: {
           'Content-Type': 'application/json',
         },
