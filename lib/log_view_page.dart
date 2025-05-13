@@ -91,7 +91,8 @@ class _LogViewPageState extends State<LogViewPage> {
 
       // Make the POST request
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/get_logs'),
+
+        Uri.parse('http://10.0.2.2:5000/get_logs'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestData),
       );
