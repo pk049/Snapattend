@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:eduvision/utils/device_utils.dart';
+
 
 
 //STATEFUL
@@ -33,12 +35,16 @@ class _LoginpageState extends State<Loginpage> {
         'password': _passwordController.text,
       };
 
-      // Make the POST request
+      final baseUrl = await DeviceUtils.getBaseUrl();
+
+
+// Make the POST request
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/login'),
+        Uri.parse('$baseUrl/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestData),
       );
+
 
       // Parse the response
       final responseData = jsonDecode(response.body);

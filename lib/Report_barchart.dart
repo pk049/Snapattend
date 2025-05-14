@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:eduvision/utils/device_utils.dart';
 
 class ReportBarChartPage extends StatefulWidget {
   final String department;
@@ -526,15 +527,18 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
       // Combine class and department as required
       String classWithDepartment = '${selectedClass}_${widget.department}';
 
-      final response = await http.post(
+      final baseUrl = await DeviceUtils.getBaseUrl();
 
-        Uri.parse('http://10.0.2.2:5000/attendance-summary'),
+// Make the POST request
+      final response = await http.post(
+        Uri.parse('$baseUrl/attendance-summary'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'class': classWithDepartment,
           'division': selectedDivision,
         }),
       );
+
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = jsonDecode(response.body);

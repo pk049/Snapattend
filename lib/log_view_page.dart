@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:eduvision/lecture_logs.dart';
+import 'package:eduvision/utils/device_utils.dart';
 
 class LogViewPage extends StatefulWidget {
   final String facultyName;
@@ -88,11 +89,12 @@ class _LogViewPageState extends State<LogViewPage> {
         'date': DateFormat('yyyy-MM-dd').format(_selectedDate),
         'department': widget.department,
       };
+      final baseUrl = await DeviceUtils.getBaseUrl();
 
       // Make the POST request
       final response = await http.post(
 
-        Uri.parse('http://10.0.2.2:5000/get_logs'),
+        Uri.parse('$baseUrl/get_logs'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestData),
       );

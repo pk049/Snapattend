@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:eduvision/utils/device_utils.dart';
+
 
 // Modify the constructor in AttendanceView to accept department parameter
 class AttendanceView extends StatefulWidget {
@@ -178,7 +180,7 @@ class _AttendanceViewState extends State<AttendanceView> {
 
     try {
 
-      final Uri uri = Uri.parse('http://10.0.2.2:3000/detect_faces');
+      final Uri uri = Uri.parse('http://172.17.0.2:5000/detect_faces');
       final request = http.MultipartRequest('POST', uri);
 
       // Add text fields

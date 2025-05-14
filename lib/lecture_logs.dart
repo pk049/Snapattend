@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:eduvision/utils/device_utils.dart';
 
 class LectureLogs extends StatefulWidget {
   final String subject;
@@ -68,10 +69,11 @@ class _LectureLogsState extends State<LectureLogs> {
         'lecture_number': widget.lectureNumber,
       };
 
+      final baseUrl = await DeviceUtils.getBaseUrl();
       // Make the POST request
       final response = await http.post(
 
-        Uri.parse('http://10.0.2.2:5000/get_lecture_logs'),
+        Uri.parse('$baseUrl/get_lecture_logs'),
 
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestData),

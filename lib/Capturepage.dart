@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:eduvision/Attendance_view.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:eduvision/utils/device_utils.dart';
 
 class CapturePage extends StatefulWidget {
   final String? department;
@@ -204,10 +205,12 @@ class _CapturePageState extends State<CapturePage> {
       // Construct the class_department string as requested
       String classDepartment = "${classValue}_${widget.department}";
 
+      final baseUrl = await DeviceUtils.getBaseUrl();
+
       // Make POST request to the API
       final response = await http.post(
 
-        Uri.parse('http://10.0.2.2:5000/get_subjects'),
+        Uri.parse('$baseUrl/get_subjects'),
 
         headers: {
           'Content-Type': 'application/json',
