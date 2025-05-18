@@ -33,11 +33,11 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, this.professorName, this.department});
+  const MyHomePage({super.key, required this.title, this.professorName, this.department,this.email,});
   final String title;
   final String? professorName;
   final String? department;
-
+  final String? email;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -212,7 +212,8 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
 
     return Scaffold(
-      drawer: Navbar(),
+      drawer: Navbar( professorName: widget.professorName ?? "Professor Name",
+        email: widget.email ?? "email@example.com",),
       appBar: AppBar(
         backgroundColor: Colors.blueAccent,
         centerTitle: true,

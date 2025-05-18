@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:eduvision/utils/device_utils.dart';
 
-class ReportBarChartPage extends StatefulWidget {
+class SubjectReportPage extends StatefulWidget {
   final String department;
 
-  const ReportBarChartPage({Key? key, required this.department}) : super(key: key);
+  const SubjectReportPage({Key? key, required this.department}) : super(key: key);
 
   @override
-  State<ReportBarChartPage> createState() => _ReportBarChartPageState();
+  State<SubjectReportPage> createState() => _SubjectReportPageState();
 }
 
-class _ReportBarChartPageState extends State<ReportBarChartPage> {
+class _SubjectReportPageState extends State<SubjectReportPage> {
   String selectedClass = 'FY';
   String selectedDivision = 'NA';
+  String selectedSubject = '';
   bool isLoading = false;
   bool hasError = false;
   String errorMessage = '';
-  List<AttendanceData> attendanceData = [];
+  List<Map<String, dynamic>> attendanceData = [];
+  List<String> classOptions = ['FY', 'SY', 'TY', 'Final_Yr'];
+  List<String> divisionOptions = ['A', 'B', 'NA'];
+  List<String> subjectOptions = [];
+  bool isSubjectsLoading = false;
 
-  final List<String> classOptions = ['FY', 'SY', 'TY', 'Final_Yr'];
-  final List<String> divisionOptions = ['A', 'B', 'NA'];
+  @override
+  void initState() {
+    super.initState();
+    _loadSubjects();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +38,7 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
         backgroundColor: Colors.blueAccent,
         centerTitle: true,
         title: const Text(
-          "Class Attendance Report",
+          "Subject Attendance Report",
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -85,14 +92,14 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
                           ],
                         ),
                         child: const Icon(
-                          Icons.bar_chart,
+                          Icons.subject,
                           color: Colors.white,
                           size: 40,
                         ),
                       ),
                       const SizedBox(height: 20),
                       const Text(
-                        "Class Based Report",
+                        "Subject Based Report",
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -174,7 +181,10 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
                             if (newValue != null) {
                               setState(() {
                                 selectedClass = newValue;
+                                selectedSubject = '';  // Reset subject when class changes
+                                subjectOptions = [];   // Clear subject options
                               });
+                              _loadSubjects();  // Load subjects for the new class
                             }
                           },
                         ),
@@ -201,6 +211,38 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
                             if (newValue != null) {
                               setState(() {
                                 selectedDivision = newValue;
+                                selectedSubject = '';  // Reset subject when division changes
+                              });
+                              _loadSubjects();  // Reload subjects when division changes
+                            }
+                          },
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        // Subject Dropdown
+                        isSubjectsLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Subject',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            prefixIcon: const Icon(Icons.subject),
+                          ),
+                          value: subjectOptions.contains(selectedSubject) ? selectedSubject : null,
+                          hint: const Text("Select Subject"),
+                          items: subjectOptions.map((String subject) {
+                            return DropdownMenuItem<String>(
+                              value: subject,
+                              child: Text(subject),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                selectedSubject = newValue;
                               });
                             }
                           },
@@ -228,7 +270,9 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            onPressed: isLoading ? null : _fetchAttendanceData,
+                            onPressed: (isLoading || selectedSubject.isEmpty)
+                                ? null
+                                : _fetchAttendanceData,
                           ),
                         ),
                       ],
@@ -271,7 +315,7 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
                   ),
                 ),
 
-              // Bar Chart Section
+              // Attendance Table
               if (attendanceData.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(20),
@@ -313,19 +357,17 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            "Attendance Percentage by Subject",
-                            style: TextStyle(
+                          const SizedBox(height: 10),
+                          Text(
+                            "Subject: $selectedSubject",
+                            style: const TextStyle(
                               fontSize: 16,
-                              color: Colors.black54,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(height: 15),
-                          SizedBox(
-                            height: 300,
-                            child: _buildBarChart(),
-                          ),
+                          const SizedBox(height: 20),
+                          _buildAttendanceTable(),
                           const SizedBox(height: 20),
                           _buildLegend(),
                         ],
@@ -342,113 +384,84 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
     );
   }
 
-  Widget _buildBarChart() {
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        maxY: 100,
-        barTouchData: BarTouchData(
-          enabled: true,
-          touchTooltipData: BarTouchTooltipData(
-            tooltipBgColor: Colors.blueAccent.withOpacity(0.9),
-            tooltipPadding: const EdgeInsets.all(10),
-            tooltipMargin: 8,
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              String subjectName = attendanceData[groupIndex].subject;
-              return BarTooltipItem(
-                '$subjectName\n${rod.toY.toStringAsFixed(1)}%',
-                const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              );
-            },
-          ),
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                if (value >= 0 && value < attendanceData.length) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      _getShortSubjectName(attendanceData[value.toInt()].subject),
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                }
-                return const SizedBox();
-              },
-              reservedSize: 40,
+  Widget _buildAttendanceTable() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowColor: MaterialStateProperty.all(Colors.blue.shade50),
+          dataRowMinHeight: 48,
+          dataRowMaxHeight: 64,
+          columnSpacing: 20,
+          horizontalMargin: 12,
+          columns: const [
+            DataColumn(
+              label: Text(
+                'PRN',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 40,
-              getTitlesWidget: (value, meta) {
-                if (value % 20 == 0) {
-                  return Text(
-                    '${value.toInt()}%',
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  );
-                }
-                return const SizedBox();
-              },
+            DataColumn(
+              label: Text(
+                'Name',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          topTitles:  AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        borderData: FlBorderData(
-          show: true,
-          border: Border.all(color: Colors.black12),
-        ),
-        barGroups: List.generate(
-          attendanceData.length,
-              (index) {
-            final data = attendanceData[index];
-            double percentage = data.totalPossibilities > 0
-                ? (data.totalStudentPresent / data.totalPossibilities) * 100
-                : 0;
+            DataColumn(
+              label: Text(
+                'Present',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Total',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Percentage',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+          rows: attendanceData.map((student) {
+            final percentage = student['percentage'] as double;
+            final textColor = _getStatusColor(percentage);
 
-            return BarChartGroupData(
-              x: index,
-              barRods: [
-                BarChartRodData(
-                  toY: percentage,
-                  color: _getBarColor(percentage),
-                  width: 20,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(6),
-                    topRight: Radius.circular(6),
+            return DataRow(
+              cells: [
+                DataCell(Text(
+                  student['PRN'] ?? '',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                )),
+                DataCell(Text(student['name'] ?? '')),
+                DataCell(Text('${student['present_count']}')),
+                DataCell(Text('${student['total_lectures']}')),
+                DataCell(
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: textColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${percentage.toStringAsFixed(2)}%',
+                      style: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
             );
-          },
-        ),
-        gridData: FlGridData(
-          show: true,
-          horizontalInterval: 20,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.black12,
-              strokeWidth: 1,
-            );
-          },
+          }).toList(),
         ),
       ),
     );
@@ -488,23 +501,7 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
     );
   }
 
-  String _getShortSubjectName(String fullName) {
-    if (fullName.length <= 12) return fullName;
-
-    final words = fullName.split(' ');
-    if (words.length <= 1) return fullName.substring(0, 12) + '...';
-
-    String abbr = '';
-    for (var word in words) {
-      if (word.isNotEmpty) {
-        abbr += word[0];
-      }
-    }
-
-    return abbr;
-  }
-
-  Color _getBarColor(double percentage) {
+  Color _getStatusColor(double percentage) {
     if (percentage >= 90) {
       return Colors.green;
     } else if (percentage >= 70) {
@@ -516,38 +513,100 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
     }
   }
 
+  Future<void> _loadSubjects() async {
+    if (selectedClass.isEmpty) return;
+
+    setState(() {
+      isSubjectsLoading = true;
+      subjectOptions = [];
+    });
+
+    try {
+      final baseUrl = await DeviceUtils.getBaseUrl();
+
+      // Combine class and department as required
+      String classWithDepartment = '${selectedClass}_${widget.department}';
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/get_subjects'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'class': classWithDepartment,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['status'] == 'success') {
+          setState(() {
+            subjectOptions = List<String>.from(data['subjects']);
+            isSubjectsLoading = false;
+          });
+        } else {
+          setState(() {
+            errorMessage = data['message'] ?? 'Failed to load subjects';
+            isSubjectsLoading = false;
+            hasError = true;
+          });
+        }
+      } else {
+        setState(() {
+          isSubjectsLoading = false;
+          hasError = true;
+          errorMessage = 'Failed to load subjects: HTTP ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isSubjectsLoading = false;
+        hasError = true;
+        errorMessage = 'Error loading subjects: ${e.toString()}';
+      });
+    }
+  }
+
   Future<void> _fetchAttendanceData() async {
+    if (selectedSubject.isEmpty) return;
+
     setState(() {
       isLoading = true;
       hasError = false;
       errorMessage = '';
+      attendanceData = [];
     });
 
     try {
-      // Combine class and department as required
-      String classWithDepartment = '${selectedClass}_${widget.department}';
-
       final baseUrl = await DeviceUtils.getBaseUrl();
 
-// Make the POST request
+      // Combine class and department
+      String classWithDepartment = '${selectedClass}_${widget.department}';
+
       final response = await http.post(
-        Uri.parse('$baseUrl/attendance-summary'),
+        Uri.parse('$baseUrl/subject-based-report'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'class': classWithDepartment,
           'division': selectedDivision,
+          'subject': selectedSubject,
         }),
       );
 
-
       if (response.statusCode == 200) {
-        final List<dynamic> jsonData = jsonDecode(response.body);
-        setState(() {
-          attendanceData = jsonData
-              .map((item) => AttendanceData.fromJson(item))
-              .toList();
-          isLoading = false;
-        });
+        final data = jsonDecode(response.body);
+
+        if (data['status'] == 'success') {
+          setState(() {
+            attendanceData = List<Map<String, dynamic>>.from(data['report']);
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+            hasError = true;
+            errorMessage = data['message'] ?? 'Failed to load attendance data';
+          });
+        }
       } else {
         setState(() {
           isLoading = false;
@@ -562,25 +621,5 @@ class _ReportBarChartPageState extends State<ReportBarChartPage> {
         errorMessage = 'Error: ${e.toString()}';
       });
     }
-  }
-}
-
-class AttendanceData {
-  final String subject;
-  final int totalPossibilities;
-  final int totalStudentPresent;
-
-  AttendanceData({
-    required this.subject,
-    required this.totalPossibilities,
-    required this.totalStudentPresent,
-  });
-
-  factory AttendanceData.fromJson(Map<String, dynamic> json) {
-    return AttendanceData(
-      subject: json['subject'] ?? '',
-      totalPossibilities: json['total_possibilities'] ?? 0,
-      totalStudentPresent: json['total_student_present'] ?? 0,
-    );
   }
 }
