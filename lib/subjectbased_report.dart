@@ -3,33 +3,27 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:eduvision/utils/device_utils.dart';
 
-class SubjectReportPage extends StatefulWidget {
+class SubjectBasedReportPage extends StatefulWidget {
   final String department;
 
-  const SubjectReportPage({Key? key, required this.department}) : super(key: key);
+  const SubjectBasedReportPage({Key? key, required this.department}) : super(key: key);
 
   @override
-  State<SubjectReportPage> createState() => _SubjectReportPageState();
+  State<SubjectBasedReportPage> createState() => _SubjectBasedReportPageState();
 }
 
-class _SubjectReportPageState extends State<SubjectReportPage> {
+class _SubjectBasedReportPageState extends State<SubjectBasedReportPage> {
   String selectedClass = 'FY';
   String selectedDivision = 'NA';
-  String selectedSubject = '';
+  String? selectedSubject;
   bool isLoading = false;
   bool hasError = false;
   String errorMessage = '';
-  List<Map<String, dynamic>> attendanceData = [];
-  List<String> classOptions = ['FY', 'SY', 'TY', 'Final_Yr'];
-  List<String> divisionOptions = ['A', 'B', 'NA'];
   List<String> subjectOptions = [];
-  bool isSubjectsLoading = false;
+  List<StudentAttendanceData> attendanceData = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSubjects();
-  }
+  final List<String> classOptions = ['FY', 'SY', 'TY', 'Final_Yr'];
+  final List<String> divisionOptions = ['A', 'B', 'NA'];
 
   @override
   Widget build(BuildContext context) {
@@ -92,14 +86,15 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
                           ],
                         ),
                         child: const Icon(
-                          Icons.subject,
+                          Icons.assignment_ind,
                           color: Colors.white,
                           size: 40,
                         ),
                       ),
                       const SizedBox(height: 20),
                       const Text(
-                        "Subject Based Report",
+                        "Student Attendance Report",
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -181,10 +176,10 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
                             if (newValue != null) {
                               setState(() {
                                 selectedClass = newValue;
-                                selectedSubject = '';  // Reset subject when class changes
-                                subjectOptions = [];   // Clear subject options
+                                selectedSubject = null; // Reset subject when class changes
+                                subjectOptions = []; // Clear subjects
                               });
-                              _loadSubjects();  // Load subjects for the new class
+                              _fetchSubjects(); // Fetch subjects for new class
                             }
                           },
                         ),
@@ -211,9 +206,9 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
                             if (newValue != null) {
                               setState(() {
                                 selectedDivision = newValue;
-                                selectedSubject = '';  // Reset subject when division changes
+                                selectedSubject = null; // Reset subject when division changes
                               });
-                              _loadSubjects();  // Reload subjects when division changes
+                              _fetchSubjects(); // Fetch subjects for new division
                             }
                           },
                         ),
@@ -221,31 +216,33 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
                         const SizedBox(height: 15),
 
                         // Subject Dropdown
-                        isSubjectsLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : DropdownButtonFormField<String>(
+                        DropdownButtonFormField<String>(
                           decoration: InputDecoration(
                             labelText: 'Subject',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
                             prefixIcon: const Icon(Icons.subject),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: -15, vertical: -15), // 👈 Customize this
+
                           ),
-                          value: subjectOptions.contains(selectedSubject) ? selectedSubject : null,
-                          hint: const Text("Select Subject"),
+                          value: selectedSubject,
                           items: subjectOptions.map((String subject) {
                             return DropdownMenuItem<String>(
                               value: subject,
                               child: Text(subject),
                             );
                           }).toList(),
-                          onChanged: (String? newValue) {
+                          onChanged: subjectOptions.isEmpty
+                              ? null
+                              : (String? newValue) {
                             if (newValue != null) {
                               setState(() {
                                 selectedSubject = newValue;
                               });
                             }
                           },
+                          hint: const Text('Select'),
                         ),
 
                         const SizedBox(height: 25),
@@ -264,13 +261,13 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
                             ),
                             icon: const Icon(Icons.download),
                             label: const Text(
-                              "Fetch Reports",
+                              "Generate Report",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            onPressed: (isLoading || selectedSubject.isEmpty)
+                            onPressed: (isLoading || selectedSubject == null)
                                 ? null
                                 : _fetchAttendanceData,
                           ),
@@ -315,7 +312,7 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
                   ),
                 ),
 
-              // Attendance Table
+              // Student Attendance Table
               if (attendanceData.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(20),
@@ -333,7 +330,7 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                "Attendance Report",
+                                "Student Attendance",
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -358,12 +355,19 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          Text(
-                            "Subject: $selectedSubject",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              "Subject: $selectedSubject",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -385,84 +389,65 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
   }
 
   Widget _buildAttendanceTable() {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowColor: MaterialStateProperty.all(Colors.blue.shade50),
-          dataRowMinHeight: 48,
-          dataRowMaxHeight: 64,
-          columnSpacing: 20,
-          horizontalMargin: 12,
-          columns: const [
-            DataColumn(
-              label: Text(
-                'PRN',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        headingRowColor: MaterialStateProperty.all(Colors.blueAccent.withOpacity(0.1)),
+        dataRowMinHeight: 48,
+        dataRowMaxHeight: 64,
+        columnSpacing: 24,
+        horizontalMargin: 12,
+        columns: const [
+          DataColumn(
+            label: Text(
+              'PRN',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            DataColumn(
-              label: Text(
-                'Name',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+          ),
+          DataColumn(
+            label: Text(
+              'Name',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            DataColumn(
-              label: Text(
-                'Present',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+          ),
+          DataColumn(
+            label: Text(
+              'Present/Total',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            DataColumn(
-              label: Text(
-                'Total',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+          ),
+          DataColumn(
+            label: Text(
+              'Attendance %',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            DataColumn(
-              label: Text(
-                'Percentage',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-          rows: attendanceData.map((student) {
-            final percentage = student['percentage'] as double;
-            final textColor = _getStatusColor(percentage);
-
-            return DataRow(
-              cells: [
-                DataCell(Text(
-                  student['PRN'] ?? '',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                )),
-                DataCell(Text(student['name'] ?? '')),
-                DataCell(Text('${student['present_count']}')),
-                DataCell(Text('${student['total_lectures']}')),
-                DataCell(
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: textColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${percentage.toStringAsFixed(2)}%',
-                      style: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+          ),
+        ],
+        rows: attendanceData.map((data) {
+          return DataRow(
+            cells: [
+              DataCell(Text(data.prn)),
+              DataCell(Text(data.name)),
+              DataCell(Text('${data.presentCount}/${data.totalLectures}')),
+              DataCell(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(data.percentage).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${data.percentage.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _getStatusColor(data.percentage),
                     ),
                   ),
                 ),
-              ],
-            );
-          }).toList(),
-        ),
+              ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
@@ -513,20 +498,21 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
     }
   }
 
-  Future<void> _loadSubjects() async {
-    if (selectedClass.isEmpty) return;
-
+  Future<void> _fetchSubjects() async {
     setState(() {
-      isSubjectsLoading = true;
+      isLoading = true;
+      hasError = false;
+      errorMessage = '';
       subjectOptions = [];
     });
 
     try {
-      final baseUrl = await DeviceUtils.getBaseUrl();
-
       // Combine class and department as required
       String classWithDepartment = '${selectedClass}_${widget.department}';
 
+      final baseUrl = await DeviceUtils.getBaseUrl();
+
+      // Make the POST request to get subjects
       final response = await http.post(
         Uri.parse('$baseUrl/get_subjects'),
         headers: {'Content-Type': 'application/json'},
@@ -536,38 +522,37 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['status'] == 'success') {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['status'] == 'success') {
           setState(() {
-            subjectOptions = List<String>.from(data['subjects']);
-            isSubjectsLoading = false;
+            subjectOptions = List<String>.from(jsonData['subjects'] ?? []);
+            isLoading = false;
           });
         } else {
           setState(() {
-            errorMessage = data['message'] ?? 'Failed to load subjects';
-            isSubjectsLoading = false;
+            isLoading = false;
             hasError = true;
+            errorMessage = jsonData['message'] ?? 'Failed to load subjects';
           });
         }
       } else {
         setState(() {
-          isSubjectsLoading = false;
+          isLoading = false;
           hasError = true;
           errorMessage = 'Failed to load subjects: HTTP ${response.statusCode}';
         });
       }
     } catch (e) {
       setState(() {
-        isSubjectsLoading = false;
+        isLoading = false;
         hasError = true;
-        errorMessage = 'Error loading subjects: ${e.toString()}';
+        errorMessage = 'Error: ${e.toString()}';
       });
     }
   }
 
   Future<void> _fetchAttendanceData() async {
-    if (selectedSubject.isEmpty) return;
+    if (selectedSubject == null) return;
 
     setState(() {
       isLoading = true;
@@ -579,32 +564,33 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
     try {
       final baseUrl = await DeviceUtils.getBaseUrl();
 
-      // Combine class and department
-      String classWithDepartment = '${selectedClass}_${widget.department}';
-
+      // Make the POST request for subject-based report
       final response = await http.post(
         Uri.parse('$baseUrl/subject-based-report'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'class': classWithDepartment,
+          'class': selectedClass,
           'division': selectedDivision,
           'subject': selectedSubject,
+          'department': widget.department,
         }),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['status'] == 'success') {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['status'] == 'success') {
+          final List<dynamic> reportData = jsonData['report'] ?? [];
           setState(() {
-            attendanceData = List<Map<String, dynamic>>.from(data['report']);
+            attendanceData = reportData
+                .map((item) => StudentAttendanceData.fromJson(item))
+                .toList();
             isLoading = false;
           });
         } else {
           setState(() {
             isLoading = false;
             hasError = true;
-            errorMessage = data['message'] ?? 'Failed to load attendance data';
+            errorMessage = jsonData['message'] ?? 'Failed to load attendance data';
           });
         }
       } else {
@@ -621,5 +607,38 @@ class _SubjectReportPageState extends State<SubjectReportPage> {
         errorMessage = 'Error: ${e.toString()}';
       });
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch subjects when the page initializes
+    _fetchSubjects();
+  }
+}
+
+class StudentAttendanceData {
+  final String prn;
+  final String name;
+  final int presentCount;
+  final int totalLectures;
+  final double percentage;
+
+  StudentAttendanceData({
+    required this.prn,
+    required this.name,
+    required this.presentCount,
+    required this.totalLectures,
+    required this.percentage,
+  });
+
+  factory StudentAttendanceData.fromJson(Map<String, dynamic> json) {
+    return StudentAttendanceData(
+      prn: json['PRN'] ?? '',
+      name: json['name'] ?? '',
+      presentCount: json['present_count'] ?? 0,
+      totalLectures: json['total_lectures'] ?? 0,
+      percentage: (json['percentage'] ?? 0).toDouble(),
+    );
   }
 }

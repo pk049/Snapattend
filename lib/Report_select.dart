@@ -22,7 +22,7 @@ class ReportTypePage extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SubjectReportPage(department: department),
+          builder: (context) => SubjectBasedReportPage(department: department),
         ),
       );
     }
