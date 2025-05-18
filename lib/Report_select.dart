@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eduvision/Report_barchart.dart';
+import 'package:eduvision/subjectbased_report.dart'; // Import the SubjectReportPage
+
 class ReportTypePage extends StatelessWidget {
   final String department;
 
@@ -14,6 +16,13 @@ class ReportTypePage extends StatelessWidget {
         context,
         MaterialPageRoute(
           builder: (context) => ReportBarChartPage(department: department),
+        ),
+      );
+    } else if (selection == "Subject Based") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SubjectReportPage(department: department),
         ),
       );
     }
@@ -259,9 +268,9 @@ class ReportTypePage extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // Student Based Option
+                    // Subject Based Option
                     InkWell(
-                      onTap: () => _handleSelection(context, "Student Based"),
+                      onTap: () => _handleSelection(context, "Subject Based"),
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
                         height: 170,
@@ -295,7 +304,7 @@ class ReportTypePage extends StatelessWidget {
                             ),
                             const SizedBox(height: 15),
                             const Text(
-                              "Student Based",
+                              "Subject Based",
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -306,7 +315,7 @@ class ReportTypePage extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: Text(
-                                "View attendance records by student",
+                                "View attendance records by subject",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,

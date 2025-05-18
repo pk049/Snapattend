@@ -180,7 +180,7 @@ class _AttendanceViewState extends State<AttendanceView> {
 
     try {
 
-      final Uri uri = Uri.parse('http://172.17.0.2:5000/detect_faces');
+      final Uri uri = Uri.parse('http://192.168.29.102:5000/detect_faces');
       final request = http.MultipartRequest('POST', uri);
 
       // Add text fields
