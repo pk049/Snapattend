@@ -38,8 +38,8 @@ android {
         applicationId = "com.example.eduvision"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 23
+        targetSdk = 30
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
@@ -53,6 +53,11 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+}
+
+
+dependencies {
+    implementation 'androidx.core:core:1.7.0'
 }
 
 flutter {

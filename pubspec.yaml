@@ -29,6 +29,19 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   device_info_plus: ^10.0.1
+  path_provider: ^2.1.2
+  permission_handler: ^11.3.0
+  open_file: ^3.3.2
+
+  http: ^0.13.5  # For making HTTP requests
+  fluttertoast: ^8.1.2  # For showing toast messages
+
+  image_picker: ^1.0.4
+
+  intl: ^0.18.0
+
+  fl_chart: ^0.64.0
+
   flutter:
     sdk: flutter
 
@@ -40,15 +53,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  http: ^0.13.5  # For making HTTP requests
-  fluttertoast: ^8.1.2  # For showing toast messages
-
-  image_picker: ^1.0.4
-
-  intl: ^0.18.0
-
-  fl_chart: ^0.64.0
 
 
 

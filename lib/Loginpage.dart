@@ -5,6 +5,20 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:eduvision/utils/device_utils.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+
+Future<void> requestManageStoragePermission() async {
+  if (Platform.isAndroid && await Permission.manageExternalStorage.isDenied) {
+    var status = await Permission.manageExternalStorage.request();
+    if (status.isGranted) {
+      print("Permission granted");
+    } else {
+      print("Permission denied");
+      openAppSettings(); // Optional fallback
+    }
+  }
+}
 
 
 
@@ -21,6 +35,12 @@ class _LoginpageState extends State<Loginpage> {
 
   // Loading state
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    requestManageStoragePermission();  // Ask for permission when login screen loads
+  }
 
   Future<void> login() async {
     // Set loading state

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:eduvision/utils/device_utils.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:open_file/open_file.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class SubjectBasedReportPage extends StatefulWidget {
   final String department;
@@ -17,6 +22,7 @@ class _SubjectBasedReportPageState extends State<SubjectBasedReportPage> {
   String selectedDivision = 'NA';
   String? selectedSubject;
   bool isLoading = false;
+  bool isDownloading = false;
   bool hasError = false;
   String errorMessage = '';
   List<String> subjectOptions = [];
@@ -223,8 +229,6 @@ class _SubjectBasedReportPageState extends State<SubjectBasedReportPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             prefixIcon: const Icon(Icons.subject),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: -15, vertical: -15), // 👈 Customize this
-
                           ),
                           value: selectedSubject,
                           items: subjectOptions.map((String subject) {
@@ -371,6 +375,55 @@ class _SubjectBasedReportPageState extends State<SubjectBasedReportPage> {
                             ),
                           ),
                           const SizedBox(height: 20),
+
+                          // Download buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.file_download),
+                                label: const Text("CSV"),
+                                onPressed: isDownloading ? null : () => _downloadReport('csv'),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.picture_as_pdf),
+                                label: const Text("PDF"),
+                                onPressed: isDownloading ? null : () => _downloadReport('pdf'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+
+                          // Show loading indicator while downloading
+                          if (isDownloading)
+                            const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Column(
+                                  children: [
+                                    CircularProgressIndicator(),
+                                    SizedBox(height: 10),
+                                    Text("Downloading report..."),
+                                  ],
+                                ),
+                              ),
+                            ),
+
                           _buildAttendanceTable(),
                           const SizedBox(height: 20),
                           _buildLegend(),
@@ -605,6 +658,84 @@ class _SubjectBasedReportPageState extends State<SubjectBasedReportPage> {
         isLoading = false;
         hasError = true;
         errorMessage = 'Error: ${e.toString()}';
+      });
+    }
+  }
+
+  Future<void> _downloadReport(String format) async {
+    if (selectedSubject == null || attendanceData.isEmpty) return;
+
+    setState(() {
+      isDownloading = true;
+    });
+
+    try {
+      // Check storage permission
+      if (!kIsWeb) {
+        var status = await Permission.storage.status;
+        if (!status.isGranted) {
+          status = await Permission.storage.request();
+          if (!status.isGranted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Storage permission is required to download the report")),
+            );
+            setState(() {
+              isDownloading = false;
+            });
+            return;
+          }
+        }
+      }
+
+      final baseUrl = await DeviceUtils.getBaseUrl();
+
+      // Make the POST request to download the report
+      final response = await http.post(
+        Uri.parse('$baseUrl/download-report'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'class': selectedClass,
+          'division': selectedDivision,
+          'subject': selectedSubject,
+          'department': widget.department,
+          'format': format,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Get the app directory to save the file
+        final directory = Directory('/storage/emulated/0/Download'); // For Android
+        final String fileName = format == 'csv'
+            ? 'attendance_report_${selectedClass}_${selectedDivision}_${selectedSubject}.csv'
+            : 'attendance_report_${selectedClass}_${selectedDivision}_${selectedSubject}.pdf';
+
+        final String filePath = '${directory.path}/$fileName';
+
+        // Write the file
+        final File file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Report downloaded successfully as $fileName")),
+        );
+
+        // Open the file
+        await OpenFile.open(filePath);
+
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to download report: ${response.reasonPhrase}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error downloading report: ${e.toString()}")),
+      );
+    } finally {
+      setState(() {
+        isDownloading = false;
       });
     }
   }
