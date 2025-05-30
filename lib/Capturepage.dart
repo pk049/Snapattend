@@ -8,9 +8,10 @@ import 'package:eduvision/utils/device_utils.dart';
 
 class CapturePage extends StatefulWidget {
   final String? department;
+  final String? professorName;
 
   // Update constructor to accept department parameter
-  const CapturePage({Key? key, this.department}) : super(key: key);
+  const CapturePage({Key? key, this.department, this.professorName}) : super(key: key);
 
   @override
   _CapturePageState createState() => _CapturePageState();
@@ -288,6 +289,9 @@ class _CapturePageState extends State<CapturePage> {
               time: currentTime,
               imagePath: photo.path,
               department: widget.department ?? 'None', // Pass department to AttendanceView
+              professorName: widget.professorName ?? 'None', // Pass professor name here
+
+
             ),
           ),
         );
